@@ -6,6 +6,7 @@ CFLAGS = -Wall -Wextra -Werror -I includes -g
 
 SRCS = parsing/init.c \
 	parsing/parse_arguments.c \
+	parsing/check_args.c \
 	main.c
 
 OBJS = $(SRCS:.c=.o)

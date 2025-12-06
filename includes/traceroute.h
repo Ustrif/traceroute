@@ -8,6 +8,8 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <stdbool.h>
+#include <limits.h>
+#include <ctype.h>
 
 typedef enum	s_proto
 {
@@ -30,7 +32,7 @@ typedef struct s_args
 }	t_args;
 
 void	init_t_args(t_args	*arg);
-int		parse_args(t_args *args, char **argv);
-
+int		parse_args(t_args *args, int argc, char **argv);
+int		check_args(t_args *args);
 
 #endif // __traceroute__
