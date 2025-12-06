@@ -1,0 +1,7 @@
+# executable files
+.out
+.exe
+
+# IDLE files and directories
+.vscode/
+
