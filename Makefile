@@ -2,11 +2,11 @@ NAME = traceroute
 
 CC = cc
 
-CFLAGS = -Wall -Wextra -Werror -I include -g
+CFLAGS = -Wall -Wextra -Werror -I includes -g
 
-LIBS = 
-
-SRCS = parsing/*.c
+SRCS = parsing/init.c \
+	parsing/parse_arguments.c \
+	main.c
 
 OBJS = $(SRCS:.c=.o)
 
@@ -14,8 +14,7 @@ all: $(NAME)
 
 $(NAME): $(OBJS)
 	@echo "Linking $(NAME)..."
-	@$(CC) $(CFLAGS) -o $(NAME) $(OBJS) $(LIBS)
-
+	@$(CC) $(CFLAGS) -o $(NAME) $(OBJS)
 %.o: %.c
 	@echo "Compiling $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
