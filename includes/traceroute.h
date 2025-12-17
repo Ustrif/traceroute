@@ -59,5 +59,6 @@ int		parse_args(t_args *args, int argc, char **argv);
 int		check_args(t_args *args);
 char	*get_ip_address(t_args *args);
 void	init_program(t_program *p, t_args *args, char *ip);
+void	print_rtt(struct timeval *start, struct timeval *end);
 
 #endif // __traceroute__
