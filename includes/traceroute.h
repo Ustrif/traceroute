@@ -15,6 +15,13 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <ctype.h>
+#include <sys/time.h>
+#include <netinet/in.h>
+#include <netinet/ip_icmp.h>
+#include <netinet/ip.h>
+#include <sys/select.h>
+
+#define BUF_SIZE 4096
 
 typedef enum	s_proto
 {
@@ -41,6 +48,11 @@ typedef struct	s_pro
 	t_args	*args;
 	char	ip[16];
 }	t_program;
+
+struct icmp_payload
+{
+	struct timeval 	tv;
+};
 
 void	init_t_args(t_args	*arg);
 int		parse_args(t_args *args, int argc, char **argv);
