@@ -60,5 +60,6 @@ int		check_args(t_args *args);
 char	*get_ip_address(t_args *args);
 void	init_program(t_program *p, t_args *args, char *ip);
 void	print_rtt(struct timeval *start, struct timeval *end);
+char	*reverse_resolver(in_addr_t ip);
 
 #endif // __traceroute__
