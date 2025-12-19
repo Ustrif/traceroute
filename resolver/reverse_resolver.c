@@ -16,7 +16,6 @@ char	*reverse_resolver(in_addr_t ip)
 	int	res = getnameinfo((struct sockaddr *) &temp_addr, len, buf, sizeof(buf), NULL, 0, NI_NAMEREQD);
 	if (res != 0)
 	{
-		printf("reverse DNS bulunamadi: %s\n", gai_strerror(res));
 		return (NULL);
 	}
 	result = strdup(buf);
