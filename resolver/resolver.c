@@ -26,7 +26,7 @@ static in_addr_t resolver(char *hostname)
 	return (result);
 }
 
-in_addr_t get_ip_address(const char *host)
+in_addr_t get_ip_address(char *host)
 {
 	in_addr_t	result;
 
