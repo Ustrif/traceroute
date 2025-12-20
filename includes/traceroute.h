@@ -18,8 +18,10 @@
 #include <sys/time.h>
 #include <netinet/in.h>
 #include <netinet/ip_icmp.h>
+#include <netinet/udp.h>
 #include <netinet/ip.h>
 #include <sys/select.h>
+#include <linux/errqueue.h>
 
 #define BUF_SIZE 4096
 
