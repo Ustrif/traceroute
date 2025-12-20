@@ -7,7 +7,10 @@ CFLAGS = -Wall -Wextra -Werror -I includes -g
 SRCS = parsing/init.c \
 	parsing/parse_arguments.c \
 	parsing/check_args.c \
+	protocols/icmp.c \
 	resolver/resolver.c \
+	resolver/reverse_resolver.c \
+	utils/get_rtt.c \
 	main.c
 
 OBJS = $(SRCS:.c=.o)
