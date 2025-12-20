@@ -6,7 +6,7 @@ static in_addr_t resolver(char *hostname)
 	struct addrinfo		*rp;
 	int					s;
 	struct sockaddr_in	*ipv4;
-	in_addr_t			result;
+	in_addr_t			result = 0;
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
@@ -16,7 +16,7 @@ static in_addr_t resolver(char *hostname)
 	if (s != 0)
 	{
 		printf("ip adresi bulunamadı: %s\n", gai_strerror(s));
-		return (NULL);
+		return (0);
 	}
 	ipv4 = (struct sockaddr_in *)rp->ai_addr;
 
