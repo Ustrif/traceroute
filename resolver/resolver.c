@@ -1,12 +1,12 @@
 #include "traceroute.h"
 
-static char	*resolver(char *hostname)
+static in_addr_t resolver(char *hostname)
 {
 	struct addrinfo		hints;
 	struct addrinfo		*rp;
 	int					s;
-	char				ipstr[INET_ADDRSTRLEN];
 	struct sockaddr_in	*ipv4;
+	in_addr_t			result;
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
@@ -19,17 +19,18 @@ static char	*resolver(char *hostname)
 		return (NULL);
 	}
 	ipv4 = (struct sockaddr_in *)rp->ai_addr;
-	inet_ntop(AF_INET, &(ipv4->sin_addr), ipstr, INET_ADDRSTRLEN);
+
+	result = ipv4->sin_addr.s_addr;
 	freeaddrinfo(rp);
 
-	return (strdup(ipstr));
+	return (result);
 }
 
-char	*get_ip_address(t_args *args)
+in_addr_t get_ip_address(const char *host)
 {
-	char	*result;
+	in_addr_t	result;
 
-	result = resolver(args->host);
+	result = resolver(host);
 	return (result);
 }
 
