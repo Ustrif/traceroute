@@ -12,22 +12,28 @@ static struct timeval get_rtt(struct timeval *start, struct timeval *end)
 		diff.tv_sec--;
 		diff.tv_usec += 1000000;
 	}
+
+	if (diff.tv_sec < 0)
+	{
+		diff.tv_sec = 0;
+		diff.tv_usec = 0;
+	}
 	return (diff);
 }
 
 void	print_rtt(struct timeval *start, struct timeval *end)
 {
 	struct timeval	tv;
-	long long		time;
+	double			time;
 
 	time = 0;
 	tv = get_rtt(start, end);
-	time += tv.tv_sec * 1000000;
-	time += tv.tv_usec;
 
-	time /= 1000;
-	printf("%lld ms", time);
+	time += (double) tv.tv_sec * 1000.0;
+	time += (double) tv.tv_usec / 1000.0;
+
+	printf("%.3f ms", time);
 	fflush(stdout);
-	
+
 	return ;
 }
