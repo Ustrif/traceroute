@@ -10,8 +10,12 @@ static int	run(t_args *args, in_addr_t ip)
 		case ICMP:
 			result = icmp(args, ip);
 			break ;
+		case UDP:
+			result = udp(args, ip);
+			break ;
 		default:
-			break;
+			return (1);
+			break ;
 	}
 	if (result < 0)
 		return (1);

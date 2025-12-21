@@ -8,6 +8,7 @@ SRCS = parsing/init.c \
 	parsing/parse_arguments.c \
 	parsing/check_args.c \
 	protocols/icmp.c \
+	protocols/udp.c \
 	resolver/resolver.c \
 	resolver/reverse_resolver.c \
 	utils/get_rtt.c \
