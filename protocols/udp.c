@@ -1,8 +1,6 @@
 #include "traceroute.h"
 
-#define SEQ 20025
-
-bool g_flag = 0;
+extern bool g_flag;
 
 static void	modify_target(struct sockaddr_in *p, in_addr_t ip, int port)
 {
@@ -11,7 +9,7 @@ static void	modify_target(struct sockaddr_in *p, in_addr_t ip, int port)
 	p->sin_addr.s_addr = ip;
 }
 
-int	icmp(t_args *args, in_addr_t ip)
+int	udp(t_args *args, in_addr_t ip)
 {
 	int					tos = args->tos;
 	int					udp_socket;
@@ -19,15 +17,12 @@ int	icmp(t_args *args, in_addr_t ip)
 	int					start = args->first_hop_num;
 	int					finish = args->max_hop_num;
 	int					times = args->packet_nums;
-	char				buf[BUF_SIZE];
 	int					timeout_time = args->wait;
 	fd_set				readfds;
 	struct timeval		tv;
 	bool				resolve = args->resolve;
 	int					port = args->port;
-
-	// PACKET
-	char	packet[sizeof(tv)];
+	char				packet[sizeof(tv)];
 
 	// SOCKET SETTINGS
 	udp_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -54,9 +49,6 @@ int	icmp(t_args *args, in_addr_t ip)
 		return (-1);
 	}
 
-	// INITIALIZE BUFFER
-	memset(&buf, 0, BUF_SIZE);
-	
 	for (int ttl = start; ttl <= finish; ttl++)
 	{
 		// MODIFY TARGET
@@ -111,49 +103,55 @@ int	icmp(t_args *args, in_addr_t ip)
 			else if (ret == 0)
 			{
 				printf(" * ");
-				break ;
 			}
 			else if (ret && FD_ISSET(udp_socket, &readfds))
 			{
-				int	reclen = recvfrom(udp_socket, buf, sizeof(buf), 0, NULL, NULL);
+				// MESSAGE HEADER
+				struct msghdr		msg;
+				char				control_buf[BUF_SIZE];
+				struct iovec		iov;
+				char				dummy_buf[1024];
+
+				// IOV for recv
+				iov.iov_base = dummy_buf;
+				iov.iov_len = sizeof(dummy_buf);
+				msg.msg_iov = &iov;
+				msg.msg_iovlen = 1;
+
+				// BUFFER SETTINGS
+				memset(&msg, 0, sizeof(msg));
+				msg.msg_control = control_buf;
+				msg.msg_controllen = sizeof(control_buf);
+
+				int	reclen = recvmsg(udp_socket, &msg, MSG_ERRQUEUE);
 				if (reclen < 0)
 				{
 					close (udp_socket);
-					perror("recvfrom error");
+					perror("recvmsg error");
 					return (-1);
 				}
-				// SIZE KONTROL.
-				if (reclen < (int)sizeof(struct iphdr))
-					break ;
-				struct iphdr *ip_hdr = (struct iphdr *)buf;
-				int ip_header_len = ip_hdr->ihl * 4;
-				if (reclen < ip_header_len + (int)sizeof(struct icmphdr))
-					break ;
-				struct icmphdr *icmp_r = (struct icmphdr *)(buf + ip_header_len);
-				// END TIME.
-				struct timeval endtime;
+
+				// END TIME
+				struct timeval	endtime;
 				gettimeofday(&endtime, NULL);
 
-				if (icmp_r->type == ICMP_TIME_EXCEEDED)
+				struct cmsghdr 				*cmsg = CMSG_FIRSTHDR(&msg);
+				if (!cmsg)
+					continue ;
+				struct sock_extended_err	*ee = (struct sock_extended_err *)CMSG_DATA(cmsg);
+				struct sockaddr_in			*rtr_exceed;
+
+				if (ee->ee_origin == SO_EE_ORIGIN_ICMP)
 				{
-					if (reclen < ip_header_len + (int)sizeof(struct icmphdr) + (int)sizeof(struct iphdr))
-						break ;
-					struct iphdr *inner_ip = (struct iphdr *)(buf + ip_header_len + sizeof(struct icmphdr));
-					int inner_ip_len = inner_ip->ihl * 4;
-					if ((long unsigned int ) reclen < ip_header_len + sizeof(struct icmphdr) + inner_ip_len + (int)sizeof(struct icmphdr))
-						break ;
-					struct icmphdr *inner_icmp = (struct icmphdr *)((char *)inner_ip + inner_ip_len);
-					if (inner_icmp->un.echo.id == htons(getpid() & 0xFFFF)
-						&& inner_icmp->un.echo.sequence == htons(SEQ + ttl))
+					if (ee->ee_type == ICMP_TIME_EXCEEDED)
 					{
-						struct in_addr src_ip;
-						src_ip.s_addr = ip_hdr->saddr;
 						if (!print_ip)
 						{
-							printf(" %s ", inet_ntoa(src_ip));
+							rtr_exceed = (struct sockaddr_in *)SO_EE_OFFENDER(ee);
+							printf(" %s ", inet_ntoa(rtr_exceed->sin_addr));
 							if (resolve)
 							{
-								char	*rres = reverse_resolver(src_ip.s_addr);
+								char	*rres = reverse_resolver(rtr_exceed->sin_addr.s_addr);
 								if (rres)
 								{
 									printf("(%s)", rres);
@@ -165,34 +163,31 @@ int	icmp(t_args *args, in_addr_t ip)
 						print_rtt(&starttime, &endtime);
 						printf(" ");
 						print_ip++;
-						break ;
 					}
-				}
-				else if (icmp_r->type == ICMP_PORT_UNREACH)
-				{
-					g_flag = 1;
-					struct in_addr src_ip;
-					src_ip.s_addr = ip_hdr->saddr;
-					if (!print_ip)
+					else if (ee->ee_type == ICMP_DEST_UNREACH && ee->ee_code == ICMP_PORT_UNREACH)
 					{
-						printf(" %s ", inet_ntoa(src_ip));
-						if (resolve)
-						{
-							char	*rres = reverse_resolver(src_ip.s_addr);
-							if (rres)
-							{
-								printf("(%s)", rres);
-								free(rres);
-							}
-						}
-						printf(" -> ");
-					}
-					print_rtt(&starttime, &endtime);
-					printf(" ");
-					print_ip++;
-					break ;
-				}
+						g_flag = 1;
 
+						if (!print_ip)
+						{
+							rtr_exceed = (struct sockaddr_in *)SO_EE_OFFENDER(ee);
+							printf(" %s ", inet_ntoa(rtr_exceed->sin_addr));
+							if (resolve)
+							{
+								char	*rres = reverse_resolver(rtr_exceed->sin_addr.s_addr);
+								if (rres)
+								{
+									printf("(%s)", rres);
+									free(rres);
+								}
+							}
+							printf(" -> ");
+						}
+						print_rtt(&starttime, &endtime);
+						printf(" ");
+						print_ip++;
+					}
+				}
 			}
 		}
 		printf("\n");
