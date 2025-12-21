@@ -14,5 +14,7 @@ int		check_args(t_args *args)
 		return (printf("wait sec error\n"), 1);
 	if (args->tos > __INT_LEAST8_MAX__ * 2)
 		return (printf("tos value error\n"), 1);
+	if (args->protocol == TCP && args->port == 33434)
+		args->port = 80;
 	return (0);
 }
