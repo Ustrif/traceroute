@@ -13,6 +13,9 @@ static int	run(t_args *args, in_addr_t ip)
 		case UDP:
 			result = udp(args, ip);
 			break ;
+		case TCP:
+			result = tcp(args, ip);
+			break ;
 		default:
 			return (1);
 			break ;
