@@ -25,6 +25,7 @@
 #include <linux/errqueue.h>
 
 #define BUF_SIZE 4096
+#define SEQ 20025
 
 typedef enum	s_proto
 {
@@ -67,5 +68,7 @@ char		*reverse_resolver(in_addr_t ip);
 int			icmp(t_args *args, in_addr_t ip);
 int			udp(t_args *args, in_addr_t ip);
 int			tcp(t_args *args, in_addr_t ip);
+
+unsigned short checksum(void *b, int len);
 
 #endif // __traceroute__

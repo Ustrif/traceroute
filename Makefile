@@ -13,6 +13,7 @@ SRCS = parsing/init.c \
 	resolver/resolver.c \
 	resolver/reverse_resolver.c \
 	utils/get_rtt.c \
+	utils/checksum.c \
 	main.c
 
 OBJS = $(SRCS:.c=.o)
