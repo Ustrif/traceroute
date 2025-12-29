@@ -7,6 +7,8 @@ char	*reverse_resolver(in_addr_t ip)
 	char				buf[NI_MAXHOST];
 	char				*result;
 
+	buf[0] = '\0';
+
 	memset(&temp_addr, 0, sizeof(temp_addr));
 	temp_addr.sin_family = AF_INET;
 	temp_addr.sin_addr.s_addr = ip;
@@ -15,6 +17,10 @@ char	*reverse_resolver(in_addr_t ip)
 
 	int	res = getnameinfo((struct sockaddr *) &temp_addr, len, buf, sizeof(buf), NULL, 0, NI_NAMEREQD);
 	if (res != 0)
+	{
+		return (NULL);
+	}
+	if (strlen(buf) > 1 && strcmp(buf, "_gateway") == 0)
 	{
 		return (NULL);
 	}
