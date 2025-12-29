@@ -33,7 +33,7 @@ static void	place_data(t_args *args, char where, int val)
 		case 'q':
 			args->packet_nums = val;
 			break ;
-		case 'r':
+		case 'n':
 			args->resolve = false;
 			break ;
 		case 't':
@@ -57,7 +57,7 @@ static void	place_data(t_args *args, char where, int val)
 
 static int	handle_options(t_args *args, int argc, char **argv)
 {
-	const char	*opts[] = {"-p", "-f", "-m", "-q", "-w", "-t", "-r", "-T", "-I", "-U", NULL};
+	const char	*opts[] = {"-p", "-f", "-m", "-q", "-w", "-t", "-n", "-T", "-I", "-U", NULL};
 	int	val;
 
 	val = 0;
@@ -137,10 +137,11 @@ int	parse_args(t_args *args, int argc, char **argv)
 {
 	if (argc == 1)
 	{
-		printf("Usage:\ntraceroute [-p port 1-65535] [-f first_hop 1-30]"); 
+		printf("Usage:\ntraceroute [-p port 1-65535] [-f first_hop 1-30] [-n no-resolve-host]"); 
 		printf(" [-m max_hop 1-30] [-q packet number 1-5]\n[-t tos 0-256] [-w wait 1-20] [protocols -T -U -I] x.x\n\n");
 		printf("-p for port. 1-65535\n");
 		printf("-f for first hop number 1-30 for default\n");
+		printf("-n no resolve for hop hostname");
 		printf("-m for max hop number\n");
 		printf("-q for packet number per ttl\n");
 		printf("-t for tos 0-256\n");
