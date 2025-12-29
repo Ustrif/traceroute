@@ -1,6 +1,6 @@
 #include "traceroute.h"
 
-#include <linux/tcp.h> // KALDIR.
+//#include <linux/tcp.h> // KALDIR.
 
 /*
 GELEN PAKET İNCELEMESİ ŞART.
