@@ -1,11 +1,5 @@
 #include "traceroute.h"
 
-//#include <linux/tcp.h> // KALDIR.
-
-/*
-GELEN PAKET İNCELEMESİ ŞART.
-
-*/
 extern bool g_flag;
 
 struct pseudo_header
@@ -70,7 +64,7 @@ static void compute_tcp_checksum(struct iphdr *ip, struct tcphdr *tcp, struct ti
 	memset(pseudogram, 0, psize);
 	memcpy(pseudogram, &psh, sizeof(struct pseudo_header));
 	memcpy(pseudogram + sizeof(struct pseudo_header), tcp, sizeof(struct tcphdr));
-    if (tv)
+	if (tv)
 	{
 		memcpy(pseudogram + sizeof(struct pseudo_header) + sizeof(struct tcphdr), tv, payload_len);
 	}
@@ -103,7 +97,7 @@ int	tcp(t_args *args, in_addr_t ip)
 		printf("no local ip\n");
 		return (-1);
 	}
-	
+
 	// SOCKET SETTINGS
 	icmp_socket = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
 	if (icmp_socket == -1)
@@ -199,12 +193,11 @@ int	tcp(t_args *args, in_addr_t ip)
 				return (-1);
 			}
 
+			// TIMEOUT
+			tv.tv_sec = timeout_time;
+			tv.tv_usec = 0;
 			while (1)
 			{
-				// TIMEOUT
-				tv.tv_sec = timeout_time;
-				tv.tv_usec = 0;
-
 				// SELECT INITIALIZE
 				FD_ZERO(&readfds);
 				FD_SET(tcp_socket, &readfds);
@@ -216,8 +209,11 @@ int	tcp(t_args *args, in_addr_t ip)
 				int	ret = select(big_socket_num + 1, &readfds, NULL, NULL, &tv);
 				if (ret == -1)
 				{
+					if (errno == EINTR)
+						continue;
 					perror("select error");
 					close(tcp_socket);
+					close(icmp_socket);
 					return (-1);
 				}
 				else if (ret == 0)
@@ -225,7 +221,7 @@ int	tcp(t_args *args, in_addr_t ip)
 					printf(" * ");
 					break ;
 				}
-				else if (ret && FD_ISSET(icmp_socket, &readfds))
+				if (ret && FD_ISSET(icmp_socket, &readfds))
 				{
 					int	reclen = recvfrom(icmp_socket, buf, sizeof(buf), 0, NULL, NULL);
 					if (reclen < 0)
@@ -237,12 +233,12 @@ int	tcp(t_args *args, in_addr_t ip)
 					}
 
 					// SIZE KONTROL.
-					if (reclen < (int)sizeof(struct iphdr))
-						break ;
+					if (reclen < (int) sizeof(struct iphdr))
+						continue;
 					struct iphdr *ip_hdr = (struct iphdr *)buf;
 					int ip_header_len = ip_hdr->ihl * 4;
 					if (reclen < ip_header_len + (int)sizeof(struct icmphdr))
-						break ;
+						continue;
 					struct icmphdr *icmp_r = (struct icmphdr *)(buf + ip_header_len);
 
 					// END TIME.
@@ -251,16 +247,14 @@ int	tcp(t_args *args, in_addr_t ip)
 
 					if (icmp_r->type == ICMP_TIME_EXCEEDED)
 					{
-						if (reclen < ip_header_len + (int)sizeof(struct icmphdr) + (int)sizeof(struct iphdr))
-							break ;
+						if (reclen < ip_header_len + (int)sizeof(struct icmphdr) + (int)sizeof(struct iphdr) + 8)
+							continue;
 						struct iphdr *inner_ip = (struct iphdr *)(buf + ip_header_len + sizeof(struct icmphdr));
-						int inner_ip_len = inner_ip->ihl * 4;
-						if ((long unsigned int ) reclen < ip_header_len + sizeof(struct icmphdr) + inner_ip_len + (int)sizeof(struct tcphdr))
-							break ;
-						struct tcphdr *inner_tcp = (struct tcphdr *)((char *)inner_ip + inner_ip_len);
+						struct tcphdr *inner_tcp = (struct tcphdr *)((char *)inner_ip + (inner_ip->ihl * 4));
 
-						if (ip_hdr->id == ip_package->id
-							|| inner_tcp->source == tcp_package->source)
+						if (ntohs(inner_ip->id) == ntohs(ip_package->id)
+							|| ntohs(inner_tcp->source) == ntohs(tcp_package->source)
+							|| ntohs(inner_tcp->seq) == ntohs(tcp_package->seq))
 						{
 							struct in_addr src_ip;
 							src_ip.s_addr = ip_hdr->saddr;
@@ -286,7 +280,7 @@ int	tcp(t_args *args, in_addr_t ip)
 						}
 					}
 				}
-				else if (ret && FD_ISSET(tcp_socket, &readfds))
+				if (ret && FD_ISSET(tcp_socket, &readfds))
 				{
 					int	reclen = recvfrom(tcp_socket, buf, sizeof(buf), 0, NULL, NULL);
 					if (reclen < 0)
@@ -299,11 +293,11 @@ int	tcp(t_args *args, in_addr_t ip)
 
 					// SIZE KONTROL.
 					if (reclen < (int)sizeof(struct iphdr))
-						break ;
+						continue;
 					struct iphdr *ip_hdr = (struct iphdr *)buf;
 					int ip_header_len = ip_hdr->ihl * 4;
 					if (reclen < ip_header_len + (int)sizeof(struct tcphdr))
-						break ;
+						continue;
 					struct tcphdr *tcp_r = (struct tcphdr *)(buf + ip_header_len);
 
 					// END TIME.
@@ -312,9 +306,9 @@ int	tcp(t_args *args, in_addr_t ip)
 
 					if (tcp_r->rst || tcp_r->ack)
 					{
-						if (ip_hdr->id == ip_package->id
-							|| tcp_r->source == tcp_package->source)
+						if (ntohs(tcp_r->dest) == ntohs(tcp_package->source))
 						{
+							g_flag = 1;
 							struct in_addr src_ip;
 							src_ip.s_addr = ip_hdr->saddr;
 
