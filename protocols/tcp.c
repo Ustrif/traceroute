@@ -18,7 +18,7 @@ static void	modify_target(struct sockaddr_in *p, in_addr_t ip, int port)
 	p->sin_addr.s_addr = ip;
 }
 
-static uint32_t get_local_ip()
+static uint32_t get_local_ip( void )
 {
 	int sock = socket(AF_INET, SOCK_DGRAM, 0);
 	if (sock < 0)
