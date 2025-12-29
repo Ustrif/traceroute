@@ -58,17 +58,17 @@ struct icmp_payload
 	struct timeval 	tv;
 };
 
-void		init_t_args(t_args	*arg);
-int			parse_args(t_args *args, int argc, char **argv);
-int			check_args(t_args *args);
-in_addr_t	get_ip_address(char *host);
-void		init_program(t_program *p, t_args *args, char *ip);
-void		print_rtt(struct timeval *start, struct timeval *end);
-char		*reverse_resolver(in_addr_t ip);
-int			icmp(t_args *args, in_addr_t ip);
-int			udp(t_args *args, in_addr_t ip);
-int			tcp(t_args *args, in_addr_t ip);
-
+void			init_t_args(t_args	*arg);
+int				parse_args(t_args *args, int argc, char **argv);
+int				check_args(t_args *args);
+in_addr_t		get_ip_address(char *host);
+void			init_program(t_program *p, t_args *args, char *ip);
+void			print_rtt(struct timeval *start, struct timeval *end);
+char			*reverse_resolver(in_addr_t ip);
+int				icmp(t_args *args, in_addr_t ip);
+int				udp(t_args *args, in_addr_t ip);
+int				tcp(t_args *args, in_addr_t ip);
 unsigned short checksum(void *b, int len);
+void			print_intro(t_args* args);
 
 #endif // __traceroute__

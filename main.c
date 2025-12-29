@@ -44,7 +44,7 @@ int	main(int argc, char *argv[])
 	if (!ip)
 		return (1);
 
-	// INTRO
-	// ekle.
-	return (run(&args, ip));
+	print_intro(&args);
+	int	result = run(&args, ip);
+	return (result);
 }
