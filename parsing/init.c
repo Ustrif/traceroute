@@ -12,13 +12,3 @@ void	init_t_args(t_args	*arg)
 	arg->tos = 0;
 	arg->wait = 3;
 }
-
-void	init_program(t_program *p, t_args *args, char *ip)
-{
-	if (!ip)
-		return ;
-	p->args = args;
-	memset(p->ip, 0, 16);
-	memmove(p->ip, ip, strlen(ip));
-	free(ip);
-}
