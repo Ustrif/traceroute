@@ -59,10 +59,12 @@ static int	handle_options(t_args *args, int argc, char **argv)
 {
 	const char	*opts[] = {"-p", "-f", "-m", "-q", "-w", "-t", "-n", "-T", "-I", "-U", NULL};
 	int	val;
+	int	flag;
 
 	val = 0;
 	for (int i = 1; i != argc; i++)
 	{
+		flag = 0;
 		for (int y = 0; y != 10; y++)
 		{
 			if (strcmp(argv[i], opts[y]) == 0 && y < 6)
@@ -73,14 +75,21 @@ static int	handle_options(t_args *args, int argc, char **argv)
 					printf("parameter error\n");
 					return (1);
 				}
+				flag++;
 				place_data(args, opts[y][1], val);
 				break ;
 			}
 			else if (strcmp(argv[i], opts[y]) == 0 && y >= 6)
 			{
 				place_data(args, opts[y][1], 0);
+				flag++;
 				break ;
 			}
+		}
+		if (argv[i][0] == '-' && !flag)
+		{
+			printf("option error: %s \n", argv[i]);
+			return (1);
 		}
 	}
 	return (0);
